@@ -9,14 +9,16 @@ def main():
         jsonFromFile = json.load(jsonFile)
         for item in jsonFromFile['response']['docs']:
             dataToPreserve = {}
+            linkData = {}
             insert_if_available(dataToPreserve,item,'itemID')
             insert_if_available(dataToPreserve,item,'title')
             insert_if_available(dataToPreserve,item,'abstract')
             insert_if_available(dataToPreserve,item,'dateDisplay')
             insert_if_available(dataToPreserve,item,'year')
-            insert_if_available(dataToPreserve,item,'topic')
-            insert_if_available(dataToPreserve,item,'collection')
-            insert_if_available(dataToPreserve,item,'FacetName')
+            insert_if_available(linkData,item,'topic')
+            insert_if_available(linkData,item,'collection')
+            insert_if_available(linkData,item,'FacetName')
+            dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
             parseResult.append(dataToPreserve)
 
     with open("result"+str(filename),"w+") as outFile:

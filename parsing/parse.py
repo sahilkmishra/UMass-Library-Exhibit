@@ -2,11 +2,11 @@ import sys
 import json
 
 LINKDATA = ['topic', 'collection', 'FacetName']
-TOPLEVELDATA = ['itemID', 'title', 'abstract', 'dateDisplay', 'year']
+TOPLEVELDATA = [ 'title', 'abstract', 'dateDisplay', 'year']
 
 def main():
     filename = sys.argv[1]
-    parseResult = []
+    parseResult = {}
     with open(filename) as jsonFile:
         jsonFromFile = json.load(jsonFile)
         for item in jsonFromFile['response']['docs']:
@@ -18,14 +18,14 @@ def main():
                 insert_if_available(linkData,item,key)
             dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
             dataToPreserve['links'] = []
-            parseResult.append(dataToPreserve)
+            parseResult[item['itemID']] = dataToPreserve
 
     linkTable = {}
-    for item in parseResult:
+    for itemID, item in parseResult.items():
         for link in item['linkdata']:
             if not link in linkTable:
                 linkTable[link] = []
-            linkTable[link].append(item['itemID'])
+            linkTable[link].append(itemID)
 
 
     finalResult = {'nodes': parseResult, 'links' : linkTable}

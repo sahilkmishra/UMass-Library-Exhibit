@@ -17,6 +17,7 @@ def main():
             for key in LINKDATA:
                 insert_if_available(linkData,item,key)
             dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
+            dataToPreserve['links'] = []
             parseResult.append(dataToPreserve)
 
     linkTable = {}
@@ -25,6 +26,7 @@ def main():
             if not link in linkTable:
                 linkTable[link] = []
             linkTable[link].append(item['itemID'])
+
 
     finalResult = {'nodes': parseResult, 'links' : linkTable}
 
@@ -39,4 +41,3 @@ def insert_if_available(giveTo,takeFrom,key):
 
 if __name__ == '__main__':
     main()
-

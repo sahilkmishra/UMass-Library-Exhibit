@@ -1,6 +1,8 @@
 import sys
 import json
 
+LINKDATA = ['topic', 'collection', 'FacetName']
+TOPLEVELDATA = ['itemID', 'title', 'abstract', 'dateDisplay', 'year']
 
 def main():
     filename = sys.argv[1]
@@ -10,19 +12,24 @@ def main():
         for item in jsonFromFile['response']['docs']:
             dataToPreserve = {}
             linkData = {}
-            insert_if_available(dataToPreserve,item,'itemID')
-            insert_if_available(dataToPreserve,item,'title')
-            insert_if_available(dataToPreserve,item,'abstract')
-            insert_if_available(dataToPreserve,item,'dateDisplay')
-            insert_if_available(dataToPreserve,item,'year')
-            insert_if_available(linkData,item,'topic')
-            insert_if_available(linkData,item,'collection')
-            insert_if_available(linkData,item,'FacetName')
+            for key in TOPLEVELDATA:
+                insert_if_available(dataToPreserve,item,key)
+            for key in LINKDATA:
+                insert_if_available(linkData,item,key)
             dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
             parseResult.append(dataToPreserve)
 
+    linkTable = {}
+    for item in parseResult:
+        for link in item['linkdata']:
+            if not link in linkTable:
+                linkTable[link] = []
+            linkTable[link].append(item['itemID'])
+
+    finalResult = {'nodes': parseResult, 'links' : linkTable}
+
     with open("result"+str(filename),"w+") as outFile:
-        json.dump(parseResult,outFile)
+        json.dump(finalResult,outFile)
 
     print("done")
 

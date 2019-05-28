@@ -16,7 +16,7 @@ This portion of the project is what is used to parse all of the data that is tak
 * FacetName
     * These last four are delimiters and what we link nodes based off of
 
-## Once fields are preserved we also do the linking in this step which is done by a simple string comparrison (might be subject to change to something more complicated)
-### Steps for Linking
+Once fields are preserved we also do the linking in this step which is done by a simple string comparrison (might be subject to change to something more complicated)
+## Steps for Linking
 1. Create a link hash table
 2. Check all data values in `linkdata` and add `itemID`s for each element in `linkdata`

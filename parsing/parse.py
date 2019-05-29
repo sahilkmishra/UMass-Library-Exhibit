@@ -27,8 +27,14 @@ def main():
                 linkTable[link] = []
             linkTable[link].append(itemID)
 
+    for key, values in linkTable.items():
+        for itemID in values:
+            for secondID in values:
+                if itemID is secondID:
+                    continue
+                parseResult[itemID]['links'].append(secondID)
 
-    finalResult = {'nodes': parseResult, 'links' : linkTable}
+    finalResult = {'nodes': parseResult}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

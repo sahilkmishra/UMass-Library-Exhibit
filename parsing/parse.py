@@ -17,7 +17,6 @@ def main():
             for key in LINKDATA:
                 insert_if_available(linkData,item,key)
             dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
-            dataToPreserve['links'] = []
             parseResult[item['itemID']] = dataToPreserve
 
     linkTable = {}
@@ -27,14 +26,7 @@ def main():
                 linkTable[link] = []
             linkTable[link].append(itemID)
 
-    for key, values in linkTable.items():
-        for itemID in values:
-            for secondID in values:
-                if itemID is secondID:
-                    continue
-                parseResult[itemID]['links'].append(secondID)
-
-    finalResult = {'nodes': parseResult}
+    finalResult = {'nodes': parseResult, 'links' : linkTable}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

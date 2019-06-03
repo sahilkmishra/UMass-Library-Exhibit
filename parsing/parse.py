@@ -28,8 +28,8 @@ def main():
             dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
             parseResult[item['itemID']] = dataToPreserve
             if not dataToPreserve['year'] in parserResultByYear:
-                parserResultByYear[dataToPreserve['year']] = []
-            parserResultByYear[dataToPreserve['year']].append(dataToPreserve)
+                parserResultByYear[dataToPreserve['year']] = {}
+            parserResultByYear[dataToPreserve['year']][item['itemID']] = dataToPreserve
 
     linkTable = {}
     linksflat = {}

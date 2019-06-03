@@ -34,7 +34,7 @@ def main():
             if not link in linkTable:
                 linkTable[link] = []
             for existingLink in linkTable[link]:
-                linksflat.append({'target': itemID, "source": existingLink})
+                linksflat.append({'target': itemID, 'source': existingLink, 'strength': 1})
             linkTable[link].append(itemID)
 
     for linkID, links in linkTable.items():

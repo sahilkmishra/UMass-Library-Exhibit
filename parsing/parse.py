@@ -37,14 +37,13 @@ def main():
         for link in item['linkdata']:
             if not link in linkTable:
                 linkTable[link] = []
-            linkTable[link].append(itemID)
             for existingLink in linkTable[link]:
-                #print (parseResult[existingLink]['year'] + " : " + item['year'])
-                if parseResult[existingLink]['year'] is not item['year']:
+                if parseResult[existingLink]['year'] != item['year']:
                     continue
                 if not item['year'] in linksflat:
                     linksflat[item['year']] = []
                 linksflat[item['year']].append({'target': itemID, 'source': existingLink, 'strength': 1})
+            linkTable[link].append(itemID)
 
     for linkID, links in linkTable.items():
         if len(links) <= 1:

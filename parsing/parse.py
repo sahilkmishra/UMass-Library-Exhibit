@@ -28,17 +28,20 @@ def main():
             parseResult[item['itemID']] = dataToPreserve
 
     linkTable = {}
+    linksflat = []
     for itemID, item in parseResult.items():
         for link in item['linkdata']:
             if not link in linkTable:
                 linkTable[link] = []
+            for existingLink in linkTable[link]:
+                linksflat.append({'target': itemID, "source": existingLink})
             linkTable[link].append(itemID)
 
     for linkID, links in linkTable.items():
         if len(links) <= 1:
             del linkTable[linkID]
 
-    finalResult = {'nodes': parseResult, 'links' : linkTable, 'years' : sorted(years.keys())}
+    finalResult = {'nodes': parseResult, 'links' : linksflat, 'years' : sorted(years.keys())}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

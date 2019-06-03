@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+        <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+        <script src="https://d3js.org/d3-timer.v1.min.js"></script>
+        <script src="https://d3js.org/d3-force.v2.min.js"></script>
+    </head>
+    <body>
+        <svg > </svg>
+        <script type="text/javascript">
+       var nodes = [
+  { id: "mammal", group: 0, title: "Mammals", level: 1 },
+  { id: "dog"   , group: 0, title: "Dogs"   , level: 2 },
+  { id: "cat"   , group: 0, title: "Cats"   , level: 2 },
+  { id: "fox"   , group: 0, title: "Foxes"  , level: 2 },
+  { id: "elk"   , group: 0, title: "Elk"    , level: 2 },
+  { id: "insect", group: 1, title: "Insects", level: 1 },
+  { id: "ant"   , group: 1, title: "Ants"   , level: 2 },
+  { id: "bee"   , group: 1, title: "Bees"   , level: 2 },
+  { id: "fish"  , group: 2, title: "Fish"   , level: 1 },
+  { id: "carp"  , group: 2, title: "Carp"   , level: 2 },
+  { id: "pike"  , group: 2, title: "Pikes"  , level: 2 }
+]
+
+var links = [
+  { target: "mammal", source: "dog" , strength: 0.7 },
+  { target: "mammal", source: "cat" , strength: 0.7 },
+  { target: "mammal", source: "fox" , strength: 0.7 },
+  { target: "mammal", source: "elk" , strength: 0.7 },
+  { target: "insect", source: "ant" , strength: 0.7 },
+  { target: "insect", source: "bee" , strength: 0.7 },
+  { target: "fish"  , source: "carp", strength: 0.7 },
+  { target: "fish"  , source: "pike", strength: 0.7 },
+
+  { target: "cat"   , source: "elk" , strength: 0.1 },
+  { target: "carp"  , source: "ant" , strength: 0.1 },
+  { target: "elk"   , source: "bee" , strength: 0.1 },
+  { target: "dog"   , source: "cat" , strength: 0.1 },
+  { target: "fox"   , source: "ant" , strength: 0.1 },
+  { target: "pike"  , source: "dog" , strength: 0.1 }
+]
+        var json = (function () {
+            var json = null;
+            $.ajax({
+                'async': false,
+                'global': false,
+                'url': 'assets/result100.json',
+                'dataType': "json",
+                'success': function (data) {
+                    json = data;
+                }
+            });
+            return json;
+        })();
+/*
+        var nodesbefore = json['nodes']
+        var nodes = []
+        for (var key in nodesbefore){
+            nodes.push(nodesbefore[key])
+        }
+        */
+        const width = window.innerWidth
+        const height = window.innerHeight
+
+        const svg = d3.select('svg')
+          .attr('width', width)
+          .attr('height', height)
+        const simulation = d3.forceSimulation()
+            .force('charge', d3.forceManyBody().strength(-20))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+
+        const dragDrop = d3.drag()
+          .on('start', node => {
+            node.fx = node.x
+            node.fy = node.y
+          })
+          .on('drag', node => {
+            simulation.alphaTarget(0.7).restart()
+            node.fx = d3.event.x
+            node.fy = d3.event.y
+          })
+          .on('end', node => {
+            if (!d3.event.active) {
+              simulation.alphaTarget(0)
+            }
+            node.fx = null
+            node.fy = null
+          })
+        simulation.force('link', d3.forceLink()
+          .id(link => link.id)
+          .strength(link => link.strength))
+
+        function getNodeColor(node) {
+          //return node.level === 1 ? 'red' : 'gray'
+          return 'gray'
+        }
+
+        //RENDER ORDER
+        const linkElements = svg.append('g')
+          .selectAll('line')
+          .data(links)
+          .enter().append('line')
+            .attr('stroke-width', 1)
+            .attr('stroke', '#000000')
+        const nodeElements = svg.append('g')
+          .selectAll('circle')
+          .data(nodes)
+          .enter().append('circle')
+            .attr('r', 10)
+            .attr('fill', getNodeColor)
+          .call(dragDrop)
+
+        const textElements = svg.append('g')
+          .selectAll('text')
+          .data(nodes)
+          .enter().append('text')
+            .text(node => node.title)
+            .attr('font-size', 9)
+            .attr('dx', 15)
+            .attr('dy', 4)
+
+
+        simulation.nodes(nodes).on('tick', () => {
+          nodeElements
+            .attr("cx", node => node.x)
+            .attr("cy", node => node.y)
+          textElements
+            .attr("x", node => node.x)
+            .attr("y", node => node.y)
+        linkElements
+             .attr('x1', link => link.source.x)
+             .attr('y1', link => link.source.y)
+             .attr('x2', link => link.target.x)
+             .attr('y2', link => link.target.y)
+        })
+        simulation.force("link").links(links)
+        </script>
+    </body>
+</html>

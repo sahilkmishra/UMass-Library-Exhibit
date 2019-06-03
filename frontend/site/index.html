@@ -17,7 +17,7 @@
             $.ajax({
                 'async': false,
                 'global': false,
-                'url': 'assets/result100p2.json',
+                'url': 'assets/result100year.json',
                 'dataType': "json",
                 'success': function (data) {
                     json = data;
@@ -25,14 +25,14 @@
             });
             return json;
         })();
-        var nodesbefore = json['nodes']
+        var nodesbefore = json['nodes'][1969]
         nodes = []
         var i = 0
         for (var key in nodesbefore){
             nodesbefore[key].id = key
             nodes.push(nodesbefore[key])
         }
-        links = json['links']
+        links = json['links']["1969"]
         const width = window.innerWidth
         const height = window.innerHeight
 
@@ -74,7 +74,7 @@
           .data(links)
           .enter().append('line')
             .attr('stroke-width', 1)
-            .attr('stroke', '#e5e5e5')
+            .attr('stroke', '#5e5e5e')
         const nodeElements = svg.append('g')
           .selectAll('circle')
           .data(nodes)

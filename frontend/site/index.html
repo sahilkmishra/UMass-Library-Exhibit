@@ -24,7 +24,7 @@
       $.ajax({
         'async': false,
         'global': false,
-        'url': 'assets/result100year.json',
+        'url': 'assets/result100year2.json',
         'dataType': "json",
         'success': function(data) {
           json = data;
@@ -54,7 +54,7 @@
     //D3 stuff goes here
     const width = window.innerWidth
     const height = window.innerHeight
-
+    const radius = 10
     const svg = d3.select('svg')
       .attr('width', width)
       .attr('height', height)
@@ -74,8 +74,9 @@
 
     const simulation = d3.forceSimulation()
       .force('link', linkForce)
-      .force('charge', d3.forceManyBody().strength(-50))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('charge', d3.forceManyBody().strength(-70))
+      .force('gravity',d3.forceManyBody(0.05))
+     // .force('center', d3.forceCenter(width / 2, height / 2))
 
     const dragDrop = d3.drag()
       .on('start', node => {
@@ -96,7 +97,8 @@
       })
     simulation.force('link', d3.forceLink()
       .id(link => link.id)
-      .strength(link => link.strength/1000))
+      .strength(link => link.strength/100))
+      .force('gravity',d3.forceManyBody(30))
 
     function getNodeColor(node) {
       return 'gray'
@@ -148,7 +150,7 @@
       var nodeEnter = nodeElements
         .enter()
         .append('circle')
-        .attr('r', 10)
+        .attr('r', radius -.75)
         .attr('fill', 'gray')
         .call(dragDrop)
       // we link the selectNode method here
@@ -187,11 +189,11 @@
       updateGraph()
       simulation.nodes(nodes).on('tick', () => {
         nodeElements
-          .attr('cx', function(node) { return node.x })
-          .attr('cy', function(node) { return node.y })
+          .attr('cx', function(node) { return node.x = Math.max(radius, Math.min(width - radius, node.x)) })
+          .attr('cy', function(node) { return node.y = Math.max(radius, Math.min(height - radius - 149, node.y)) })
         textElements
-          .attr('x', function(node) { return node.x })
-          .attr('y', function(node) { return node.y })
+          .attr('x', function(node) { return node.x})
+          .attr('y', function(node) { return node.y})
         linkElements
           .attr('x1', function(link) { return link.source.x })
           .attr('y1', function(link) { return link.source.y })

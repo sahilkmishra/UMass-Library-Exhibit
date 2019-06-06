@@ -1,7 +1,7 @@
 import sys
 import json
+LINKDATA = ['topic', 'collection','FacetName']
 
-LINKDATA = ['topic', 'collection', 'FacetName']
 TOPLEVELDATA = [ 'title',  'dateDisplay']
 TOPLEVELDATAINARRAY = ['abstract', 'year']
 
@@ -32,24 +32,36 @@ def main():
             parserResultByYear[dataToPreserve['year']][item['itemID']] = dataToPreserve
 
     linkTable = {}
-    linksflat = {}
-    for itemID, item in parseResult.items():
+    linksByYear = {}
+    for itemId, item in parseResult.items():
         for link in item['linkdata']:
             if not link in linkTable:
                 linkTable[link] = []
-            for existingLink in linkTable[link]:
-                if parseResult[existingLink]['year'] != item['year']:
+            linkTable[link].append(itemId)
+
+    numberOfNodes = len(parseResult.keys())
+    for linkKey, links in linkTable.items():
+        if len(links) >= numberOfNodes * 1:
+            linkTable.pop(linkKey)
+            print(linkKey)
+
+
+    for key,ids in linkTable.items():
+        for itemId in ids:
+            itemIdYear = parseResult[itemId]['year']
+            for toAddItemId in ids[ids.index(itemId)+1:]:
+                if (itemIdYear != parseResult[toAddItemId]['year']):
                     continue
-                if not item['year'] in linksflat:
-                    linksflat[item['year']] = []
-                linksflat[item['year']].append({'target': itemID, 'source': existingLink, 'strength': 1})
-            linkTable[link].append(itemID)
+                if not itemIdYear in linksByYear:
+                    linksByYear[itemIdYear] = []
+                linksByYear[itemIdYear].append({'target': itemId, 'source': toAddItemId, 'strength': 1})
+
 
     for linkID, links in linkTable.items():
         if len(links) <= 1:
             del linkTable[linkID]
 
-    finalResult = {'nodes': parserResultByYear, 'links' : linksflat, 'years' : sorted(years.keys())}
+    finalResult = {'nodes': parserResultByYear, 'links' : linksByYear, 'years' : sorted(years.keys())}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

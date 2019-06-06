@@ -53,15 +53,25 @@ def main():
                 if (itemIdYear != parseResult[toAddItemId]['year']):
                     continue
                 if not itemIdYear in linksByYear:
-                    linksByYear[itemIdYear] = []
-                linksByYear[itemIdYear].append({'target': itemId, 'source': toAddItemId, 'strength': 1})
+                    linksByYear[itemIdYear] = {}
+                linkId = (toAddItemId + itemId) if itemId > toAddItemId else (itemId + toAddItemId)
+                if linkId in linksByYear [itemIdYear]:
+                    linksByYear[itemIdYear][linkId]['strength']+=1
+                    continue
+                linksByYear[itemIdYear][linkId] = {'target': itemId, 'source': toAddItemId, 'strength': 1}
+
+    resultLinks = {}
+    for year,links in linksByYear.items():
+        resultLinks[year] = []
+        for _, link in links.items():
+            resultLinks[year].append(link)
 
 
     for linkID, links in linkTable.items():
         if len(links) <= 1:
             del linkTable[linkID]
 
-    finalResult = {'nodes': parserResultByYear, 'links' : linksByYear, 'years' : sorted(years.keys())}
+    finalResult = {'nodes': parserResultByYear, 'links' : resultLinks, 'years' : sorted(years.keys())}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

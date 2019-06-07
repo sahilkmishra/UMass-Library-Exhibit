@@ -76,7 +76,7 @@
       .force('link', linkForce)
       .force('charge', d3.forceManyBody().strength(-70))
       .force('gravity',d3.forceManyBody(0.05))
-     // .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('center', d3.forceCenter(width / 2, height / 2))
 
     const dragDrop = d3.drag()
       .on('start', node => {
@@ -97,7 +97,7 @@
       })
     simulation.force('link', d3.forceLink()
       .id(link => link.id)
-      .strength(link => link.strength/100))
+      .strength(link => Math.pow(link.strength,2)/1000))
       .force('gravity',d3.forceManyBody(30))
 
     function getNodeColor(node) {
@@ -125,7 +125,7 @@
       diff.removed.forEach(node => nodes.splice(nodes.indexOf(node), 1))
       diff.added.forEach(node => nodes.push(node))
 
-      links = json['links'][year]
+      links = json['links'][year] != null? json['links'][year] : []
     }
 
     function updateGraph() {
@@ -137,8 +137,8 @@
       linkElements.exit().remove()
       var linkEnter = linkElements
         .enter().append('line')
-        .attr('stroke-width', 1)
-        .attr('stroke', 'rgba(50, 50, 50, 0.2)')
+        .attr('stroke-width', 2)
+        .attr('stroke', 'rgba(50, 50, 50,0.2)')
       linkElements = linkEnter.merge(linkElements)
 
       // nodes

@@ -76,7 +76,7 @@
       .force('link', linkForce)
       .force('charge', d3.forceManyBody().strength(-70))
       .force('gravity',d3.forceManyBody(0.05))
-     // .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('center', d3.forceCenter(width / 2, height / 2))
 
     const dragDrop = d3.drag()
       .on('start', node => {

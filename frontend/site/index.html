@@ -14,11 +14,35 @@
 </head>
 
 <body>
-  <svg> </svg>
-  <div id="bottom-bar">
-    <ul id="years"></ul>
+  <div id="main">
+    <svg> </svg>
+    <div id="bottom-bar">
+      <ul id="years"></ul>
+    </div>
+  </div>
+  <div id="side-bar">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <h2 id="side-bar-title"></h2>
+      <img id="side-bar-image"></img>
+      <h3 id="side-bar-abstract"></h3>
+      <a href="" id="side-bar-link" >View in Credo</a>
   </div>
   <script type="text/javascript">
+  var _currentYear = -1
+  function openNav() {
+    document.getElementById("side-bar").style.width = "350px";
+    document.getElementById("main").style.marginRight = "350px";
+    document.getElementById("bottom-bar").style.width = window.innerWidth-350 + "px";
+    d3.select('svg').attr('width',window.innerWidth-350)
+  }
+
+  /* Set the width of the sidebar to 0 and the left margin of the page content to 0 */
+  function closeNav() {
+    document.getElementById("side-bar").style.width = "0";
+    document.getElementById("main").style.marginRight = "0";
+    document.getElementById("bottom-bar").style.width = window.innerWidth + "px";
+    d3.select('svg').attr('width',window.innerWidth)
+  }
     var json = (function() {
       var json = null;
       $.ajax({
@@ -51,9 +75,10 @@
     });
     nodes = flattenNodes(json['nodes']["1969"])
     links = json['links']["1969"]
+    _currentYear = "1969"
     //D3 stuff goes here
-    const width = window.innerWidth
-    const height = window.innerHeight
+    var width = window.innerWidth
+    var height = window.innerHeight
     const radius = 10
     const svg = d3.select('svg')
       .attr('width', width)
@@ -97,35 +122,86 @@
       })
     simulation.force('link', d3.forceLink()
       .id(link => link.id)
-      .strength(link => Math.pow(link.strength,2)/1000))
+      .strength(link => Math.pow(link.strength,3)/1000))
       .force('gravity',d3.forceManyBody(30))
 
     function getNodeColor(node) {
       return 'gray'
     }
-
+    function findByArray(array, value) {
+        for(var i = 0; i < array.length; i += 1) {
+            if(array[i].id === value) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     //RENDER ORDER
+    function replaceNodes(newNodes){
+      const diff = {
+        removed: nodes.filter(node => findByArray(newNodes,node.id) === -1),
+        added: newNodes.filter(node => findByArray(nodes,node.id) === -1)
+      }
 
-    function onMenuClick(year) {}
+      diff.removed.forEach(node => nodes.splice(findByArray(nodes,node.id), 1))
+      diff.added.forEach(node => nodes.push(node))
+    }
 
-    function updateDataByNode(nodeId) {
+    function updateDataByNode(node) {
+      var nodesToGet = []
+      var linksToAdd = []
+      json['links_flat'].forEach(function(link) {
+        if (link['strength'] < 2)
+          return
+        /* Ok so this is the weirdest I hate cs why did this happen part of the code
+           So d3 does this weird thing to save memory (or something idk) where it takes
+           the ids that I have to represents nodes in links and puts the node value instead
+           meaning that sometimes theres an id and sometimes theres a node so we can check the
+           source/target field if its not been used otherwise we have to find the id field inside that
 
+           This is wack
+        */
+        if (link['source'] == node.id || link['source'].id == node.id){
+          linksToAdd.push(link)
+          nodesToGet.push(link['target'])
+        } else if (link['target'] == node.id || link['target'].id == node.id){
+          linksToAdd.push(link)
+          nodesToGet.push(link['source'])
+        }
+      })
+      nodesToAdd = []
+      nodesToGet.forEach(function(nodeId){
+        var newNode = json['nodes_flat'][nodeId]
+        if (newNode == null)
+          newNode = nodeId
+        newNode.id = nodeId
+        nodesToAdd.push(newNode)
+      })
+      nodesToAdd.push(node)
+      replaceNodes(nodesToAdd)
+      links = linksToAdd
+      console.log('done selecting node')
     }
 
     function updateDataByYear(year) {
 
       console.log("AY")
       var newNodes = flattenNodes(json['nodes'][year])
-      const diff = {
-        removed: nodes.filter(node => newNodes.indexOf(node) === -1),
-        added: newNodes.filter(node => nodes.indexOf(node) === -1)
-      }
-
-      diff.removed.forEach(node => nodes.splice(nodes.indexOf(node), 1))
-      diff.added.forEach(node => nodes.push(node))
+      replaceNodes(newNodes)
 
       links = json['links'][year] != null? json['links'][year] : []
+      _currentYear = year
+    }
+    function selectNode(node){
+      $('#side-bar-title').html(node['title'])
+      $('#side-bar-image').attr('src',
+'http://credo.library.umass.edu/images/resize/350/'+node['id']+'-001.jpg')
+      $('#side-bar-abstract').html(node['abstract'])
+      $('#side-bar-link').attr('href', 'http://credo.library.umass.edu/view/full/' + node['id'])
+      openNav()
+      updateDataByNode(node)
+      updateSimulation()
     }
 
     function updateGraph() {
@@ -138,7 +214,7 @@
       var linkEnter = linkElements
         .enter().append('line')
         .attr('stroke-width', 2)
-        .attr('stroke', 'rgba(50, 50, 50,0.2)')
+        .attr('stroke', 'rgba(0, 0, 50,0.2)')
       linkElements = linkEnter.merge(linkElements)
 
       // nodes
@@ -155,7 +231,7 @@
         .call(dragDrop)
       // we link the selectNode method here
       // to update the graph on every click
-      //.on('click', selectNode)
+      .on('click', selectNode)
 
       nodeElements = nodeEnter.merge(nodeElements)
 
@@ -203,6 +279,7 @@
       simulation.force('link').links(links)
       simulation.alphaTarget(0.7).restart()
     }
+
     updateSimulation()
   </script>
 

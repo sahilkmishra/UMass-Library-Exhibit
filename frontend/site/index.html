@@ -173,9 +173,11 @@
       nodesToAdd = []
       nodesToGet.forEach(function(nodeId){
         var newNode = json['nodes_flat'][nodeId]
-        if (newNode == null)
+        if (newNode == null){
           newNode = nodeId
-        newNode.id = nodeId
+        } else {
+          newNode.id = nodeId
+        }
         nodesToAdd.push(newNode)
       })
       nodesToAdd.push(node)
@@ -195,6 +197,7 @@
     }
     function selectNode(node){
       $('#side-bar-title').html(node['title'])
+      console.log(node)
       $('#side-bar-image').attr('src',
 'http://credo.library.umass.edu/images/resize/350/'+node['id']+'-001.jpg')
       $('#side-bar-abstract').html(node['abstract'])

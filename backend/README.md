@@ -1,4 +1,4 @@
 > "You watch your back, man."
 > He nodded, anxious to be gone.
 
-This is the simple backend that stores the data that will be used for the exhibit and will probably be stored on heroku
+This is for the potential research aspect of the application and we are using a * backend to query credo, parse the data and then return it to the frontend

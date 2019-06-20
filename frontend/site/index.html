@@ -139,12 +139,14 @@
 
     //RENDER ORDER
     function replaceNodes(newNodes){
+      nodes.splice(0,nodes.length)
       const diff = {
-        removed: nodes.filter(node => findByArray(newNodes,node.id) === -1),
+//        removed: nodes.filter(node => findByArray(newNodes,node.id) === -1),
         added: newNodes.filter(node => findByArray(nodes,node.id) === -1)
       }
 
-      diff.removed.forEach(node => nodes.splice(findByArray(nodes,node.id), 1))
+//      diff.removed.forEach(node => nodes.splice(findByArray(nodes,node.id), 1))
+//TODO: determine if this line should be changed into newNodes.forEach(...
       diff.added.forEach(node => nodes.push(node))
     }
 
@@ -154,7 +156,7 @@
       json['links_flat'].forEach(function(link) {
         if (link['strength'] < 2)
           return
-        /* Ok so this is the weirdest I hate cs why did this happen part of the code
+        /* Ok so this is the weirdest "I hate cs why did this happen" part of the code
            So d3 does this weird thing to save memory (or something idk) where it takes
            the ids that I have to represents nodes in links and puts the node value instead
            meaning that sometimes theres an id and sometimes theres a node so we can check the
@@ -162,10 +164,11 @@
 
            This is wack
         */
-        if (link['source'] == node.id || link['source'].id == node.id){
+
+        if (link['source'] === node.id || link['source'].id === node.id){
           linksToAdd.push(link)
           nodesToGet.push(link['target'])
-        } else if (link['target'] == node.id || link['target'].id == node.id){
+        } else if (link['target'] === node.id || link['target'].id === node.id){
           linksToAdd.push(link)
           nodesToGet.push(link['source'])
         }
@@ -176,7 +179,8 @@
         if (newNode == null){
           newNode = nodeId
         } else {
-          newNode.id = nodeId
+          if (typeof nodeId == 'string')
+            newNode.id = nodeId
         }
         nodesToAdd.push(newNode)
       })

@@ -184,7 +184,9 @@
         }
         nodesToAdd.push(newNode)
       })
-      nodesToAdd.push(node)
+      currNode = json['nodes_flat'][node.id]
+      currNode.id = node.id
+      nodesToAdd.push(currNode)
       replaceNodes(nodesToAdd)
       links = linksToAdd
       console.log('done selecting node')

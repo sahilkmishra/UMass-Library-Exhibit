@@ -205,7 +205,7 @@
       $('#side-bar-title').html(node['title'])
       console.log(node)
       $('#side-bar-image').attr('src',
-'http://credo.library.umass.edu/images/resize/350/'+node['id']+'-001.jpg')
+        'http://credo.library.umass.edu/images/resize/350/'+node['id']+'-001.jpg')
       $('#side-bar-abstract').html(node['abstract'])
       $('#side-bar-link').attr('href', 'http://credo.library.umass.edu/view/full/' + node['id'])
       openNav()
@@ -272,6 +272,8 @@
 
     function updateSimulation() {
       updateGraph()
+      width = window.innerWidth
+      height = window.innerHeight
       simulation.nodes(nodes).on('tick', () => {
         nodeElements
           .attr('cx', function(node) { return node.x = Math.max(radius, Math.min(width - radius, node.x)) })

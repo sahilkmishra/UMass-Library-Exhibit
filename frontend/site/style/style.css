@@ -1,0 +1,44 @@
+body{
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+#side-bar {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0;
+  right: 0;
+  background-color: #CCC; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.25s; /* 0.25 second transition effect to slide in the sidebar */
+}
+#bottom-bar {
+    height: 6em;
+    position: fixed;
+    bottom:0px;
+    left:0%;
+    width:100%;
+    background-color: #5e5e5e;
+    opacity: 1;
+    transition: 0.25s; /* 0.25 second transition effect to slide in the sidebar */
+}
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333333;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+li {
+  float: left;
+  font-size:6vw;
+}
+#side-bar-title{
+  text-align: center;
+}

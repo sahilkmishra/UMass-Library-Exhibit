@@ -42,3 +42,6 @@ li {
 #side-bar-title{
   text-align: center;
 }
+.texts {
+  pointer-events: none;
+}

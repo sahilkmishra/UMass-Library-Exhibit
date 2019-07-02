@@ -49,9 +49,13 @@
         'async': false,
         'global': false,
         'url': 'assets/result100year2.json',
+        //'url': 'assets/result4144.json',
         'dataType': "json",
         'success': function(data) {
           json = data;
+          nodes = json['nodes'][Object.keys(json['nodes'])[0]]
+          links = json['links'][Object.keys(json['nodes'])[0]]
+          updateSimulation()
         }
       });
       return json;

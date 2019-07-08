@@ -40,7 +40,7 @@ def main():
 
     numberOfNodes = len(parseResult.keys())
     for linkKey, links in linkTable.items():
-        "print(str(len(links))++str(numberOfNodes))"
+        #"print(str(len(links))++str(numberOfNodes))"
         if len(links) >= numberOfNodes * 1:
             linkTable.pop(linkKey)
             print(linkKey)

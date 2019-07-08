@@ -42,3 +42,12 @@ li {
 #side-bar-title{
   text-align: center;
 }
+.texts {
+  pointer-events: none;
+}
+#loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

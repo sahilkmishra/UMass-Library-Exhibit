@@ -11,7 +11,6 @@ def index(request):
 
 
 def db(request):
-
     greeting = Greeting()
     greeting.save()
 
@@ -20,5 +19,4 @@ def db(request):
     return render(request, "db.html", {"greetings": greetings})
 
 def search(request):
-    
     return JsonResponse({"8":"D"})

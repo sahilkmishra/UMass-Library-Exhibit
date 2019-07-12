@@ -25,7 +25,7 @@ def main():
                 years[str(item['year'][0])] = 1
             else:
                 years['undated'] = 1
-            dataToPreserve['linkdata'] = sorted({x for v in linkData.itervalues() for x in v})
+            dataToPreserve['linkdata'] = sorted({x for v in linkData.values() for x in v})
             parseResult[item['itemID']] = dataToPreserve
             if not dataToPreserve['year'] in parserResultByYear:
                 parserResultByYear[dataToPreserve['year']] = {}
@@ -39,19 +39,23 @@ def main():
             linkTable[link].append(itemId)
 
     numberOfNodes = len(parseResult.keys())
-    for linkKey, links in linkTable.items():
+    for linkKey in list(linkTable):
+        #DEBUG statement for playing with coefficient
         #"print(str(len(links))++str(numberOfNodes))"
-        if len(links) >= numberOfNodes * 1:
+        if len(linkTable[linkKey]) >= numberOfNodes * 1:
             linkTable.pop(linkKey)
             print(linkKey)
 
-    for linkID, links in linkTable.items():
-        if len(links) <= 1:
+    for linkID in list(linkTable):
+        if len(linkTable[linkID]) <= 1:
             del linkTable[linkID]
 
     linksByYear = {}
     linksFlat = {}
+    linkAnnotations = {}
     for key,ids in linkTable.items():
+        #This keeps tracks of all of the types of links we have without needing to check for overlap
+        linkAnnotations[key] = 1
         for itemId in ids:
             itemIdYear = parseResult[itemId]['year']
             for toAddItemId in ids[ids.index(itemId)+1:]:
@@ -59,16 +63,18 @@ def main():
                 linkId = (toAddItemId + itemId) if itemId > toAddItemId else (itemId + toAddItemId)
                 if linkId in linksFlat:
                     linksFlat[linkId]['strength']+=1
+                    linksFlat[linkId]['links'].append(key)
                     if linkId in linksByYear [itemIdYear]:
                         linksByYear[itemIdYear][linkId]['strength']+=1
+                        linksByYear[itemIdYear][linkId]['links'].append(key)
                     continue
 
-                linksFlat[linkId] = {'target': itemId, 'source': toAddItemId, 'strength': 1}
+                linksFlat[linkId] = {'target': itemId, 'source': toAddItemId, 'strength': 1, 'links':[key]}
                 if (itemIdYear != parseResult[toAddItemId]['year']):
                     continue
                 if not itemIdYear in linksByYear:
                     linksByYear[itemIdYear] = {}
-                linksByYear[itemIdYear][linkId] = {'target': itemId, 'source': toAddItemId, 'strength': 1}
+                linksByYear[itemIdYear][linkId] = {'target': itemId, 'source': toAddItemId, 'strength': 1, 'links':[key]}
 
     resultLinks = {}
     for year,links in linksByYear.items():
@@ -80,7 +86,9 @@ def main():
         resultLinksFlat.append(link)
 
 
-    finalResult = {'nodes': parserResultByYear, 'links' : resultLinks, 'nodes_flat': parseResult, 'links_flat': resultLinksFlat, 'years' : sorted(years.keys())}
+    finalResult = {'nodes': parserResultByYear, 'links' : resultLinks, 
+                   'nodes_flat': parseResult, 'links_flat': resultLinksFlat, 
+                   'years' : sorted(years.keys()), 'link_annotations' : sorted(linkAnnotations.keys())}
 
     with open("result"+str(filename),"w+") as outFile:
         json.dump(finalResult,outFile)

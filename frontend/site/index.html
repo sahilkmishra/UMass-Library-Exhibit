@@ -23,6 +23,7 @@
   </div>
   <div id="side-bar">
       <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <ul id="topics"></ul>
       <h2 id="side-bar-title"></h2>
       <img id="side-bar-image"></img>
       <h3 id="side-bar-abstract"></h3>
@@ -44,26 +45,30 @@
     document.getElementById("bottom-bar").style.width = window.innerWidth + "px";
     d3.select('svg').attr('width',window.innerWidth)
   }
+    var nodes = []
+    var links = []
+    var linkAnnotations = []
+    var linkAnnoataionsToColors = {}
     var json = (function() {
       var json = null;
       $.ajax({
         'async': false,
         'global': false,
         //'url': 'assets/result100year2.json',
-        'url': 'assets/result4144.json',
+        'url': 'assets/result100.json',
         'dataType': "json",
         'success': function(data) {
           json = data;
-          nodes = json['nodes'][Object.keys(json['nodes'])[0]]
+          nodes = flattenNodes(json['nodes'][Object.keys(json['nodes'])[0]])
           links = json['links'][Object.keys(json['nodes'])[0]]
+          linkAnnotations = json['link_annotations']
+
           $("#loading").hide()
           updateSimulation()
         }
       });
       return json;
     })();
-    var nodes = []
-    var links = []
     var years = $('ul#years')
     $.each(json['years'], function(i) {
       var li = $('<li/>')
@@ -75,12 +80,10 @@
           updateSimulation()
         });
       var aaa = $('<a/>')
-        .addClass('ui-all')
+        .addClass('bottom-bar-li')
         .text(json['years'][i])
         .appendTo(li);
-    });
-    nodes = flattenNodes(json['nodes']["1969"])
-    links = json['links']["1969"]
+    }); 
     _currentYear = "1969"
     //D3 stuff goes here
     var width = window.innerWidth
@@ -155,6 +158,44 @@
 //TODO: determine if this line should be changed into newNodes.forEach(...
       diff.added.forEach(node => nodes.push(node))
     }
+    function updateDataBySubject(subject) {
+      var nodesToGet = {}
+      var linksToAdd = []
+      json['links_flat'].forEach(function(link) {
+        if (link['links'].includes(subject)){
+          linksToAdd.push(link)
+          //console.log(link['target'] + " : " + link['source'] )
+          var targetId = link['target']
+          var sourceId = link['source']
+          if (typeof targetId == 'object'){
+            nodesToGet[targetId.id] = targetId
+          }
+          else
+            nodesToGet[targetId] = 1
+          if (typeof sourceId == 'object'){
+            nodesToGet[sourceId.id] = sourceId
+          } else 
+            nodesToGet[sourceId] = 1
+
+        } 
+      })
+      console.log("links number: " + linksToAdd.length)
+      console.log("nodes number: " + Object.keys(nodesToGet).length)
+      nodesToAdd = []
+      Object.keys(nodesToGet).forEach(function(nodeId){
+        var newNode = json['nodes_flat'][nodeId]
+        if (newNode == null) {
+          newNode = nodeId
+        } else {
+          if (typeof nodeId == 'string')
+            newNode.id = nodeId
+        }
+        nodesToAdd.push(newNode)
+      })
+      replaceNodes(nodesToAdd)
+      links = linksToAdd
+      console.log('done selecting node')
+    }
 
     function updateDataByNode(node) {
       var nodesToGet = []
@@ -214,6 +255,26 @@
         'http://credo.library.umass.edu/images/resize/350/'+node['id']+'-001.jpg')
       $('#side-bar-abstract').html(node['abstract'])
       $('#side-bar-link').attr('href', 'http://credo.library.umass.edu/view/full/' + node['id'])
+      var topics = $('ul#topics')
+      topics.empty()
+    
+      $.each(node['linkdata'], function(i) {
+        if (!linkAnnotations.includes(node['linkdata'][i]))
+          return
+        var li = $('<li/>')
+          .addClass('ui-menu-item')
+          .attr('role', 'menuitem')
+          .appendTo(topics)
+          .click(function() {
+            updateDataBySubject(node['linkdata'][i])
+            updateSimulation()
+          });
+        var aaa = $('<a/>')
+          .addClass('subject-button')
+          .removeClass('default')
+          .text(node['linkdata'][i])
+          .appendTo(li);
+      }); 
       openNav()
       updateDataByNode(node)
       updateSimulation()

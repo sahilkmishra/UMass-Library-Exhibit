@@ -45,6 +45,9 @@ body{
 .texts {
   pointer-events: none;
 }
+.links {
+  pointer-events: none;
+}
 #loading {
   position: fixed;
   top: 50%;

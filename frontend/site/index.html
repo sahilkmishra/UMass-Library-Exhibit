@@ -12,14 +12,11 @@
   <link rel="stylesheet" href="style/style.css">
   </style>
 </head>
-
 <body>
+  <svg> </svg>
   <img src="assets/loading.gif" id="loading"></img>
-  <div id="main">
-    <svg> </svg>
-    <div id="bottom-bar">
-      <ul id="years"></ul>
-    </div>
+  <div id="bottom-bar">
+    <ul id="years"></ul>
   </div>
   <div id="side-bar">
       <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -30,6 +27,7 @@
       <a href="" id="side-bar-link" >View in Credo</a>
   </div>
   <script type="text/javascript">
+  const COLORS = ['blue','red','yellow', 'green', 'purple', 'orange']
   var _currentYear = -1
   function openNav() {
     document.getElementById("side-bar").style.width = "350px";
@@ -48,50 +46,79 @@
     var nodes = []
     var links = []
     var linkAnnotations = []
-    var linkAnnoataionsToColors = {}
+    var linkAnnotationsToColors = {}
     var json = (function() {
       var json = null;
       $.ajax({
         'async': false,
         'global': false,
         //'url': 'assets/result100year2.json',
-        'url': 'assets/result100.json',
+        'url': 'assets/result200.json',
         'dataType': "json",
         'success': function(data) {
           json = data;
           nodes = flattenNodes(json['nodes'][Object.keys(json['nodes'])[0]])
           links = json['links'][Object.keys(json['nodes'])[0]]
           linkAnnotations = json['link_annotations']
-
           $("#loading").hide()
+          var years = $('ul#years')
+          $.each(json['years'], function (i) {
+            var li = $('<li/>')
+              .addClass('ui-menu-item')
+              .attr('role', 'menuitem')
+              .appendTo(years)
+              .click(function () {
+                updateDataByYear(json['years'][i])
+                updateSimulation()
+              });
+            var aaa = $('<a/>')
+              .addClass('bottom-bar-li')
+              .text(json['years'][i])
+              .appendTo(li);
+          }); 
           updateSimulation()
         }
       });
       return json;
     })();
-    var years = $('ul#years')
-    $.each(json['years'], function(i) {
-      var li = $('<li/>')
-        .addClass('ui-menu-item')
-        .attr('role', 'menuitem')
-        .appendTo(years)
-        .click(function() {
-          updateDataByYear(json['years'][i])
-          updateSimulation()
-        });
-      var aaa = $('<a/>')
-        .addClass('bottom-bar-li')
-        .text(json['years'][i])
-        .appendTo(li);
-    }); 
+    var colorToPick = [0]
+    var nextSegmentThreshhold = COLORS.length
+    linkAnnotations.forEach(e =>{
+      for(var i = 0; i < COLORS.length;  i++){
+        if (colorToPick[i] == COLORS.length){
+          if (i+1 == colorToPick.length)
+            colorToPick.push(-1)
+          COLORS[i+1]+=1
+          COLORS[i] = COLORS[i+1]
+        }
+      }
+      linkAnnotationsToColors[e] = colorToPick.slice()
+      colorToPick[0]++
+    })
     _currentYear = "1969"
     //D3 stuff goes here
     var width = window.innerWidth
     var height = window.innerHeight
     const radius = 10
-    const svg = d3.select('svg')
+    const mainWindow = d3.select('svg')
       .attr('width', width)
       .attr('height', height)
+      mainWindow.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .call(d3.zoom()
+          .scaleExtent([1 / 16, 8])
+          .on("zoom", zoomed));
+
+    const svg = mainWindow.append('g')
+        .attr("id","force-graph")
+        .attr("width", width)
+        .attr("height", height)
+      function zoomed() {
+        svg.attr("transform", d3.event.transform);
+      }
 
     const linkGroup = svg.append("g").attr("class", "links")
     const nodeGroup = svg.append("g").attr("class", "nodes")
@@ -107,10 +134,10 @@
       .strength(function (link) { return link.strength })
 
     const simulation = d3.forceSimulation()
-      .force('link', linkForce)
+      //.force('link', linkForce)
       .force('charge', d3.forceManyBody().strength(-70))
-      .force('gravity',d3.forceManyBody(0.05))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      //.force('gravity',d3.forceManyBody(0.05))
+      //.force('center', d3.forceCenter(width / 2, height / 2))
 
     const dragDrop = d3.drag()
       .on('start', node => {
@@ -131,8 +158,8 @@
       })
     simulation.force('link', d3.forceLink()
       .id(link => link.id)
-      .strength(link => Math.pow(link.strength,3)/1000))
-      .force('gravity',d3.forceManyBody(30))
+      .strength(link => Math.pow(link.strength,3)/100000))
+      //.force('gravity',d3.forceManyBody(30))
 
     function getNodeColor(node) {
       return 'gray'
@@ -203,14 +230,14 @@
       json['links_flat'].forEach(function(link) {
         if (link['strength'] < 2)
           return
-        /* Ok so this is the weirdest "I hate cs why did this happen" part of the code
+         /* Ok so this is the weirdest "I hate cs why did this happen" part of the code
            So d3 does this weird thing to save memory (or something idk) where it takes
            the ids that I have to represents nodes in links and puts the node value instead
            meaning that sometimes theres an id and sometimes theres a node so we can check the
            source/target field if its not been used otherwise we have to find the id field inside that
 
            This is wack
-        */
+         */
 
         if (link['source'] === node.id || link['source'].id === node.id){
           linksToAdd.push(link)
@@ -289,8 +316,8 @@
       linkElements.exit().remove()
       var linkEnter = linkElements
         .enter().append('line')
-        .attr('stroke-width', 2)
-        .attr('stroke', 'rgba(0, 0, 50,0.2)')
+        .attr('stroke-width', function(link){return link.strength * 2})
+        .attr('stroke', function(link){return 'rgba(0, 0, 50,'+0.1 * link.strength + ')' })
       linkElements = linkEnter.merge(linkElements)
 
       // nodes
@@ -337,14 +364,13 @@
       return newNodes;
     }
 
+
     function updateSimulation() {
       updateGraph()
-      width = window.innerWidth
-      height = window.innerHeight
       simulation.nodes(nodes).on('tick', () => {
         nodeElements
-          .attr('cx', function(node) { return node.x = Math.max(radius, Math.min(width - radius, node.x)) })
-          .attr('cy', function(node) { return node.y = Math.max(radius, Math.min(height - radius - 149, node.y)) })
+          .attr('cx', function(node) { return node.x = node.x })
+          .attr('cy', function(node) { return node.y =  node.y })
         textElements
           .attr('x', function(node) { return node.x})
           .attr('y', function(node) { return node.y})

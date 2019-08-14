@@ -1,3 +1,30 @@
+//This is where all of the rendered nodes live 
+var nodes = []
+var nodesFlat = []
+//This is where the links that are rendered live
+var links = []
+//These are the available subjects that we can link and search by
+var linkAnnotations = []
+var selectedNode = null
+var width = window.innerWidth
+var height = window.innerHeight
+var linkForce = d3.forceLink()
+    .links(links)
+    .id(link => link.id)
+    .strength(link => Math.pow(link.strength, 3) / 30000)
+    .distance(link => Math.pow(link.strength, 3) / 30000)
+const simulation = d3.forceSimulation()
+    .force('link', linkForce)
+    // .force('charge', d3.forceManyBody().strength(-35))
+    .force('gravity', d3.forceManyBody(0.05))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+var canvas = document.getElementById("main-canvas");
+var zoomcanvas = document.getElementById("zoom-canvas");
+var platform = Stardust.platform("webgl-2d", canvas, width, height);
+var snodes = Stardust.mark.create(Stardust.mark.circle(16), platform);
+var sedges = Stardust.mark.create(Stardust.mark.line(), platform);
+var stexts = Stardust.mark.createText("2d", platform);
+
 const COLORS = ['blue', 'red', 'yellow', 'green', 'purple', 'orange']
 var _currentYear = -1
 //This function opens the side bar 
@@ -15,12 +42,6 @@ function closeNav() {
     document.getElementById("bottom-bar").style.width = window.innerWidth + "px";
     d3.select('svg').attr('width', window.innerWidth)
 }
-//This is where all of the rendered nodes live 
-var nodes = []
-//This is where the links that are rendered live
-var links = []
-//These are the available subjects that we can link and search by
-var linkAnnotations = []
 var linkAnnotationsToColors = {}
 var json = (function () {
     var json = null;
@@ -28,11 +49,12 @@ var json = (function () {
         'async': false,
         'global': false,
         //'url': 'assets/result100year2.json',
-        'url': 'assets/result200.json',
+        'url': 'assets/result1000.json',
         'dataType': "json",
         'success': function (data) {
             json = data;
             nodes = flattenNodes(json['nodes'][Object.keys(json['nodes'])[0]])
+            nodesFlat = json['nodes_flat']
             links = json['links'][Object.keys(json['nodes'])[0]]
             linkAnnotations = json['link_annotations']
             $("#loading").hide()
@@ -56,6 +78,35 @@ var json = (function () {
     });
     return json;
 })();
+
+var zoom_scale = 1.0, zoom_t_x = 0.0, zoom_t_y = 0.0;
+var isDragging = false
+d3.select(canvas).call(d3.zoom().on("zoom", zoomed).scaleExtent([0.25, 8]).filter(() => {
+    var mouseCoords = d3.mouse(canvas);
+    var p = platform.getPickingPixel(mouseCoords[0] * platform.pixelRatio, mouseCoords[1] * platform.pixelRatio);
+    if (p) return false;
+    return true;
+}));
+function zoomed() {
+    zoom_scale = Math.min(8, Math.max(d3.event.transform.k, 1 / 4));
+    zoom_t_x = d3.event.transform.x;
+    zoom_t_y = d3.event.transform.y;
+}
+
+snodes.attr("center", (d) => [d.x ? d.x * zoom_scale + zoom_t_x : d.x = 0, d.y ? d.y * zoom_scale + zoom_t_y : d.y = 0]);
+snodes.attr("radius", (d) => Math.pow(10, zoom_scale));
+snodes.attr("color", [0.5, 0.5, 0.5, 1]);
+sedges.attr("p1", (d) => { return (d.source.x) ? [d.source.x * zoom_scale + zoom_t_x, d.source.y * zoom_scale + zoom_t_y] : [0, 0] });
+//sedges.attr("p1", (d) => {var source = findInNodes(d.source); return (source) ? [ source.x, source.y ]: [0,0]});
+
+//sedges.attr("p2", (d) => {var target = findInNodes(d.target); return (target) ? [ target.x, target.y ]: [0,0]});
+sedges.attr("p2", (d) => { return (d.target.x) ? [d.target.x * zoom_scale + zoom_t_x, d.target.y * zoom_scale + zoom_t_y] : [0, 0] });
+sedges.attr("color", [0, 0, 0.25, 0.1]);
+sedges.attr("width", (d) => d.strength * 3);
+stexts.attr("position", (d) => [d.x * zoom_scale + zoom_t_x + 10, d.y * zoom_scale + zoom_t_y + 10]);
+stexts.attr("text", (d) => d.title);
+simulation.nodes(nodes)
+/*
 var colorToPick = [0]
 var nextSegmentThreshhold = COLORS.length
 linkAnnotations.forEach(e => {
@@ -72,8 +123,6 @@ linkAnnotations.forEach(e => {
 })
 _currentYear = "1969"
 //D3 stuff goes here
-var width = window.innerWidth
-var height = window.innerHeight
 const radius = 10
 const mainWindow = d3.select('svg')
     .attr('width', width)
@@ -94,7 +143,6 @@ const svg = mainWindow.append('g')
 function zoomed() {
     svg.attr("transform", d3.event.transform);
 }
-
 const linkGroup = svg.append("g").attr("class", "links")
 const nodeGroup = svg.append("g").attr("class", "nodes")
 const textGroup = svg.append("g").attr("class", "texts")
@@ -103,12 +151,7 @@ var linkElements,
     nodeElements,
     textElements
 
-const simulation = d3.forceSimulation()
-    //.force('link', linkForce)
-    .force('charge', d3.forceManyBody().strength(-35))
-    //.force('gravity',d3.forceManyBody(0.05))
-    .force('center', d3.forceCenter(width / 2, height / 2))
-
+/*
 const dragDrop = d3.drag()
     .on('start', node => {
         node.fx = node.x
@@ -134,6 +177,16 @@ simulation.force('link', d3.forceLink()
 function getNodeColor(node) {
     return 'gray'
 }
+*/
+
+function findInNodes(key) {
+    for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i]["id"] === key)
+            return nodes[i]
+    }
+    return null
+}
+
 function findByArray(array, value) {
     for (var i = 0; i < array.length; i += 1) {
         if (array[i].id === value) {
@@ -236,6 +289,9 @@ function updateDataByNode(node) {
 }
 
 function updateDataByYear(year) {
+    zoom_scale = 1.0
+    zoom_t_x = 0.0
+    zoom_t_y = 0.0;
 
     console.log("AY")
     var newNodes = flattenNodes(json['nodes'][year])
@@ -245,6 +301,9 @@ function updateDataByYear(year) {
     _currentYear = year
 }
 function selectNode(node) {
+    zoom_scale = 1.0
+    zoom_t_x = 0.0
+    zoom_t_y = 0.0;
     $('#side-bar-title').html(node['title'])
     console.log(node)
     $('#side-bar-image').attr('src',
@@ -335,8 +394,8 @@ function flattenNodes(nodesToFlatten) {
 
 
 function updateSimulation() {
-    updateGraph()
-    simulation.nodes(nodes).on('tick', () => {
+    //  updateGraph()
+    /*simulation.nodes(nodes).on('tick', () => {
         nodeElements
             .attr('cx', function (node) { return node.x = node.x })
             .attr('cy', function (node) { return node.y = node.y })
@@ -349,8 +408,101 @@ function updateSimulation() {
             .attr('x2', function (link) { return link.target.x })
             .attr('y2', function (link) { return link.target.y })
     })
+    */
+    simulation.nodes(nodes)
     simulation.force('link').links(links)
+    //simulation.alphaDecay(0.01).force("linkForce", linkForce)
+    simulation.on("tick", () => {
+
+        if (isDragging && selectedNode && draggingLocation) {
+            selectedNode.x = draggingLocation[0]// * zoom_scale + zoom_t_x;
+            selectedNode.y = draggingLocation[1]// * zoom_scale + zoom_t_y;
+        }
+        snodes.data(nodes)
+        sedges.data(links)
+        stexts.data(nodes)
+        render()
+    })
     simulation.alphaTarget(0.7).restart()
+}
+function render() {
+    sedges.render()
+    snodes.render()
+    stexts.render()
+
+    platform.beginPicking(canvas.width, canvas.height);
+    snodes.attr("radius", 10); // make radius larger so it's easier to select.
+    snodes.render();
+    platform.endPicking();
+}
+
+
+var hasMoved = false;
+var draggingLocation = null;
+var ctx = null
+var lastX = 0
+var lastY = 0
+window.onload = function () {
+    ctx = canvas.getContext('webgl');
+}
+
+canvas.onclick = function (e) {
+    var x = e.clientX - canvas.getBoundingClientRect().left;
+    var y = e.clientY - canvas.getBoundingClientRect().top;
+    var p = platform.getPickingPixel(x * platform.pixelRatio, y * platform.pixelRatio);
+    if (p && !hasMoved) {
+        selectedNode = nodes[p[1]];
+        console.log(selectedNode)
+        selectNode(selectedNode)
+    }
+    hasMoved = false
+}
+canvas.onmousedown = function (e) {
+    console.log("hey")
+    var x = e.clientX - canvas.getBoundingClientRect().left;
+    var y = e.clientY - canvas.getBoundingClientRect().top;
+    var p = platform.getPickingPixel(x * platform.pixelRatio, y * platform.pixelRatio);
+    if (p) {
+        selectedNode = nodes[p[1]];
+        isDragging = true;
+        draggingLocation = [selectedNode.x, selectedNode.y];
+        var onMove = function (e) {
+            var nx = (e.clientX - canvas.getBoundingClientRect().left- zoom_t_x) / zoom_scale;
+            var ny = (e.clientY - canvas.getBoundingClientRect().top- zoom_t_y) /zoom_scale;
+
+
+            selectedNode.x = nx
+            selectedNode.y = ny
+            draggingLocation = [nx, ny];
+            simulation.alphaTarget(0.3).restart();
+            hasMoved = true
+        };
+        var onUp = function () {
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+            selectedNode = null;
+            draggingLocation = null;
+            isDragging = false;
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    }
+};
+
+canvas.onmousemove = function (e) {
+    if (isDragging) return;
+    var x = e.clientX - canvas.getBoundingClientRect().left;
+    var y = e.clientY - canvas.getBoundingClientRect().top;
+    var p = platform.getPickingPixel(x * platform.pixelRatio, y * platform.pixelRatio);
+    if (p) {
+        if (selectedNode != nodes[p[1]]) {
+            selectedNode = nodes[p[1]];
+        }
+    } else {
+        if (selectedNode != null) {
+            selectedNode = null;
+        }
+    }
 }
 
 updateSimulation()

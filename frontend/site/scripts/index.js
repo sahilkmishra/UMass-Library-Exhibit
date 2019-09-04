@@ -21,7 +21,7 @@ const simulation = d3.forceSimulation()
 var canvas = document.getElementById("main-canvas");
 var zoomcanvas = document.getElementById("zoom-canvas");
 var platform = Stardust.platform("webgl-2d", canvas, width, height);
-var snodes = Stardust.mark.create(Stardust.mark.circle(16), platform);
+var snodes = Stardust.mark.create(Stardust.mark.circle(10), platform);
 var sedges = Stardust.mark.create(Stardust.mark.line(), platform);
 var stexts = Stardust.mark.createText("2d", platform);
 
@@ -68,7 +68,7 @@ var json = (function () {
                         updateDataByYear(json['years'][i])
                         updateSimulation()
                     });
-                var aaa = $('<a/>')
+                $('<a/>')
                     .addClass('bottom-bar-li')
                     .text(json['years'][i])
                     .appendTo(li);
@@ -250,7 +250,7 @@ function selectNode(node) {
                 updateDataBySubject(node['linkdata'][i])
                 updateSimulation()
             });
-        var aaa = $('<a/>')
+        $('<a/>')
             .addClass('subject-button')
             .removeClass('default')
             .text(node['linkdata'][i])

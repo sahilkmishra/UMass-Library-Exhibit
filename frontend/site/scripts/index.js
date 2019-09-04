@@ -49,7 +49,7 @@ var json = (function () {
         'async': false,
         'global': false,
         //'url': 'assets/result100year2.json',
-        'url': 'assets/result1000.json',
+        'url': 'assets/result200.json',
         'dataType': "json",
         'success': function (data) {
             json = data;
@@ -88,7 +88,7 @@ d3.select(canvas).call(d3.zoom().on("zoom", zoomed).scaleExtent([0.25, 8]).filte
     return true;
 }));
 function zoomed() {
-    zoom_scale = Math.min(8, Math.max(d3.event.transform.k, 1 / 4));
+    zoom_scale = Math.min(8, Math.max(d3.event.transform.k, 1 / 8));
     zoom_t_x = d3.event.transform.x;
     zoom_t_y = d3.event.transform.y;
 }
@@ -97,87 +97,13 @@ snodes.attr("center", (d) => [d.x ? d.x * zoom_scale + zoom_t_x : d.x = 0, d.y ?
 snodes.attr("radius", (d) => Math.pow(10, zoom_scale));
 snodes.attr("color", [0.5, 0.5, 0.5, 1]);
 sedges.attr("p1", (d) => { return (d.source.x) ? [d.source.x * zoom_scale + zoom_t_x, d.source.y * zoom_scale + zoom_t_y] : [0, 0] });
-//sedges.attr("p1", (d) => {var source = findInNodes(d.source); return (source) ? [ source.x, source.y ]: [0,0]});
-
-//sedges.attr("p2", (d) => {var target = findInNodes(d.target); return (target) ? [ target.x, target.y ]: [0,0]});
 sedges.attr("p2", (d) => { return (d.target.x) ? [d.target.x * zoom_scale + zoom_t_x, d.target.y * zoom_scale + zoom_t_y] : [0, 0] });
 sedges.attr("color", [0, 0, 0.25, 0.1]);
 sedges.attr("width", (d) => d.strength * 3);
 stexts.attr("position", (d) => [d.x * zoom_scale + zoom_t_x + 10, d.y * zoom_scale + zoom_t_y + 10]);
 stexts.attr("text", (d) => d.title);
+stexts.attr("fontSize", 10);
 simulation.nodes(nodes)
-/*
-var colorToPick = [0]
-var nextSegmentThreshhold = COLORS.length
-linkAnnotations.forEach(e => {
-    for (var i = 0; i < COLORS.length; i++) {
-        if (colorToPick[i] == COLORS.length) {
-            if (i + 1 == colorToPick.length)
-                colorToPick.push(-1)
-            COLORS[i + 1] += 1
-            COLORS[i] = COLORS[i + 1]
-        }
-    }
-    linkAnnotationsToColors[e] = colorToPick.slice()
-    colorToPick[0]++
-})
-_currentYear = "1969"
-//D3 stuff goes here
-const radius = 10
-const mainWindow = d3.select('svg')
-    .attr('width', width)
-    .attr('height', height)
-mainWindow.append("rect")
-    .attr("width", width)
-    .attr("height", height)
-    .style("fill", "none")
-    .style("pointer-events", "all")
-    .call(d3.zoom()
-        .scaleExtent([1 / 16, 8])
-        .on("zoom", zoomed));
-
-const svg = mainWindow.append('g')
-    .attr("id", "force-graph")
-    .attr("width", width)
-    .attr("height", height)
-function zoomed() {
-    svg.attr("transform", d3.event.transform);
-}
-const linkGroup = svg.append("g").attr("class", "links")
-const nodeGroup = svg.append("g").attr("class", "nodes")
-const textGroup = svg.append("g").attr("class", "texts")
-
-var linkElements,
-    nodeElements,
-    textElements
-
-/*
-const dragDrop = d3.drag()
-    .on('start', node => {
-        node.fx = node.x
-        node.fy = node.y
-    })
-    .on('drag', node => {
-        simulation.alphaTarget(0.7).restart()
-        node.fx = d3.event.x
-        node.fy = d3.event.y
-    })
-    .on('end', node => {
-        if (!d3.event.active) {
-            simulation.alphaTarget(0)
-        }
-        node.fx = null
-        node.fy = null
-    })
-simulation.force('link', d3.forceLink()
-    .id(link => link.id)
-    .strength(link => Math.pow(link.strength, 3) / 30000))
-//.force('gravity',d3.forceManyBody(30))
-
-function getNodeColor(node) {
-    return 'gray'
-}
-*/
 
 function findInNodes(key) {
     for (var i = 0; i < nodes.length; i++) {
@@ -335,54 +261,6 @@ function selectNode(node) {
     updateSimulation()
 }
 
-function updateGraph() {
-    // links
-    linkElements = linkGroup.selectAll('line')
-        .data(links, function (link) {
-            return link.target.id + link.source.id
-        })
-    linkElements.exit().remove()
-    var linkEnter = linkElements
-        .enter().append('line')
-        .attr('stroke-width', function (link) { return link.strength * 2 })
-        .attr('stroke', function (link) { return 'rgba(0, 0, 50,' + 0.1 * link.strength + ')' })
-    linkElements = linkEnter.merge(linkElements)
-
-    // nodes
-    nodeElements = nodeGroup.selectAll('circle')
-        .data(nodes, function (node) { return node.id })
-
-    nodeElements.exit().remove()
-
-    var nodeEnter = nodeElements
-        .enter()
-        .append('circle')
-        .attr('r', radius - .75)
-        .attr('fill', 'gray')
-        .call(dragDrop)
-        // we link the selectNode method here
-        // to update the graph on every click
-        .on('click', selectNode)
-
-    nodeElements = nodeEnter.merge(nodeElements)
-
-    // texts
-    textElements = textGroup.selectAll('text')
-        .data(nodes, function (node) { return node.id })
-
-    textElements.exit().remove()
-
-    var textEnter = textElements
-        .enter()
-        .append('text')
-        .text(function (node) { return node.title })
-        .attr('font-size', 15)
-        .attr('dx', 15)
-        .attr('dy', 4);
-
-    textElements = textEnter.merge(textElements)
-}
-
 function flattenNodes(nodesToFlatten) {
     newNodes = []
     for (var key in nodesToFlatten) {
@@ -394,21 +272,6 @@ function flattenNodes(nodesToFlatten) {
 
 
 function updateSimulation() {
-    //  updateGraph()
-    /*simulation.nodes(nodes).on('tick', () => {
-        nodeElements
-            .attr('cx', function (node) { return node.x = node.x })
-            .attr('cy', function (node) { return node.y = node.y })
-        textElements
-            .attr('x', function (node) { return node.x })
-            .attr('y', function (node) { return node.y })
-        linkElements
-            .attr('x1', function (link) { return link.source.x })
-            .attr('y1', function (link) { return link.source.y })
-            .attr('x2', function (link) { return link.target.x })
-            .attr('y2', function (link) { return link.target.y })
-    })
-    */
     simulation.nodes(nodes)
     simulation.force('link').links(links)
     //simulation.alphaDecay(0.01).force("linkForce", linkForce)

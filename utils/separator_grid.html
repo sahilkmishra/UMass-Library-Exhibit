@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: auto auto auto auto;
+            grid-gap: 10px;
+            background-color: rgb(255, 255, 255);
+            padding: 10px;
+        }
+    
+        .grid-container>img {
+            background-color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 20px 0;
+            font-size: 30px;
+        }
+</style>
+</head>
+<body>
+    <div id="content">
+        <div class="grid-container">
+        </div>
+    </div>
+    <div id="finish">
+        <button onclick="finishAndExport()">Done</button>
+    </div>
+    <div id="result"></div>
+    <script>
+        var node = null;
+        var nodes = [];
+        var nodesToKeep = [];
+        var nodeIndexes = {}
+        function finishAndExport(){
+            for (const [key, value] of Object.entries(nodeIndexes)) {
+                nodesToKeep.push(nodes[key])
+            }
+            var json = JSON.stringify(nodesToKeep);
+            console.log(json);
+            $('#content').empty()
+            $('#finish').empty()
+            $('#result').text(json)
+        }
+        function onAccept(i){
+            if (!(i in nodeIndexes))
+                nodeIndexes[i] = 1;
+            nodeIndexes[i] = (nodeIndexes[i] == 1) ? 0 : 1;
+            $("#"+i).css("background-color","#2196F3")
+            if (nodeIndexes[i] == 1)
+                $("#"+i).css("background-color","#FFFFFF")
+        }
+        nodes = (function () {
+            var json = null;
+            $.ajax({
+                'async': false,
+                'global': false,
+                //'url': 'assets/result100year2.json',
+                'url': '200.json',
+                'dataType': "json",
+                'success': function (data) {
+                    json = data.response.docs;
+                    var grid = $('.grid-container')
+                    $.each(json, function (i) {
+                        var node = $('<img src="http://credo.library.umass.edu/images/resize/300/' + json[i].itemID + '-001.jpg' + '"></img>')
+                        node.attr("id",i)
+                        node.on('click',function(i){onAccept(i.target.id)})
+                        node.appendTo(grid)
+                        /*$('<img/>')
+                            .attr('src', 'http://credo.library.umass.edu/images/resize/125/' + json[i].itemID + '-001.jpg')
+                            .appendTo(node);*/
+                    });
+                }
+            });
+            return json;
+        })();
+
+    </script>
+</body>
+</html>
